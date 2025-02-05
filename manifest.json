@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "UberEats 菜單選擇器",
+  "version": "1.0",
+  "description": "協助在 UberEats 選擇和記錄菜單項目",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.ubereats.com/tw/store/*"],
+      "css": ["styles.css"],
+      "js": ["content.js"]
+    }
+  ]
+} 

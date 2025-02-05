@@ -1,0 +1,102 @@
+[data-testid="store-desktop-loaded-coi"] ul:nth-of-type(2) > li {
+  position: relative;
+  transition: box-shadow 0.3s ease;
+}
+
+[data-testid="store-desktop-loaded-coi"] ul:nth-of-type(2) > li:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-button {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+[data-testid="store-desktop-loaded-coi"] ul ul > li:hover .add-button {
+  opacity: 1;
+}
+
+.add-button::before {
+  content: '+';
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.selected-items-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  max-height: 80vh;
+  background-color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  display: none;
+  z-index: 10000;
+  overflow-y: auto;
+}
+
+.selected-items-panel.visible {
+  display: block;
+}
+
+.selected-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.delete-button {
+  color: red;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.template-editor {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10001;
+  display: none;
+}
+
+.template-editor.visible {
+  display: block;
+}
+
+.output-preview {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10001;
+  display: none;
+}
+
+.output-preview.visible {
+  display: block;
+} 
