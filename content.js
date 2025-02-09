@@ -1,14 +1,72 @@
 let selectedItems = new Set();
-let parentTemplate = '`週{weekday}午餐 {date} {store}`\n{items}\n';
+let parentTemplate = '@頻道\n`週{weekday}午餐 ~ {date}`\n`{store}`\n{items}\n\n週{weekday}{date} :驚嘆號: 10:00收單\n請各位學長姊好心提醒左右鄰居點餐';
 let itemTemplate = '{icon} {item}';
+
+let breakfastTemplate = {
+  header: '`週{weekday}早餐 {date} {store}`\n{items}\n',
+  footer: ':allo_dance: 數量有限，先到先拿唷 :allo_dance:'
+};
+
+let lunchTemplate = {
+  header: '@頻道\n`週{weekday}午餐 ~ {date}`\n`{store}`\n{items}\n',
+  footer: '週{weekday}{date} :驚嘆號: 10:00收單\n請各位學長姊好心提醒左右鄰居點餐'
+};
+
+let zhCharIcons = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '零'];
+let alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
+let alphabetWhiteIcons = [];
+let alphabetYellowIcons = [];
+alphabet.forEach(letter => {
+  alphabetWhiteIcons.push(`alphabet-white-${letter.toLowerCase()}`);
+  alphabetYellowIcons.push(`alphabet-yellow-${letter.toLowerCase()}`);
+});
+let numberIcons = zhCharIcons;
+let requestDate = "tomorrow";
+
 
 // 取得明天的日期和星期
 function getTomorrowDate() {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayOfWeek = tomorrow.getDay();
+  switch(dayOfWeek) {
+    case 0:
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      dayOfWeek = tomorrow.getDay();
+      break;
+    case 6:
+      tomorrow.setDate(tomorrow.getDate() + 2);
+      dayOfWeek = tomorrow.getDay();
+      break;
+    default:
+      break;
+  }
   const options = { month: '2-digit', day: '2-digit' };
   const date = tomorrow.toLocaleDateString('zh-TW', options).replaceAll('/', '/');
   const weekday = ['日', '一', '二', '三', '四', '五', '六'][tomorrow.getDay()];
+  return { date, weekday };
+}
+
+// 取得明天的日期和星期
+function getCurrentDate() {
+  const current = new Date();
+  current.setDate(current.getDate());
+  const dayOfWeek = current.getDay();
+  switch(dayOfWeek) {
+    case 0:
+      current.setDate(current.getDate() + 1);
+      dayOfWeek = current.getDay();
+      break;
+    case 6:
+      current.setDate(current.getDate() + 2);
+      dayOfWeek = current.getDay();
+      break;
+    default:
+      break;
+  }
+  const options = { month: '2-digit', day: '2-digit' };
+  const date = current.toLocaleDateString('zh-TW', options).replaceAll('/', '/');
+  const weekday = ['日', '一', '二', '三', '四', '五', '六'][current.getDay()];
   return { date, weekday };
 }
 
@@ -32,9 +90,6 @@ function initialize() {
   // 創建模板編輯器
   createTemplateEditor();
   
-  // 創建輸出預覽
-  createOutputPreview();
-  
   // 添加菜單項目的加號按鈕
   addPlusButtons();
 }
@@ -55,44 +110,125 @@ function createPanel() {
   </style>
   <h3>已選擇的項目</h3>
     <div id="selected-items-list"></div>
-    <button id="toggle-preview">顯示/隱藏 預覽</button>
-    <div id="preview-container">
-      <pre><div id="output-content"></div></pre>
-      <button id="copy-output">複製</button>
+    <button id="toggle-preview" class="btn bg-blue">顯示/隱藏 預覽</button>&nbsp;&nbsp;
+    <button id="toggle-editor" class="btn bg-yellow">開啟編輯器</button>
+    <div id="preview-container" >
+      <pre><textarea rows="10" style="width: 100%; margin-top: 5px" id="output-content" class="hidden"></textarea></pre>
+      <button id="copy-output" class="btn bg-yellow">複製</button>
     </div>
   `;
   document.body.appendChild(panel);
 
   document.getElementById('toggle-preview').addEventListener('click', function() {
     document.getElementById('preview-container').classList.toggle('hidden');
-    document.getElementById('output-content').textContent = generateOutput();
+    document.getElementById('output-content').value = generateOutput();
+  });
+
+  document.getElementById('toggle-editor').addEventListener('click', function() {
+    document.querySelector('.template-editor').classList.add('visible');
   });
 
   document.getElementById('copy-output').addEventListener('click', function() {
-    const content = document.getElementById('output-content').textContent;
+    const content = document.getElementById('output-content').value;
     navigator.clipboard.writeText(content);
     alert('已複製到剪貼簿！');
   });
+
 }
 
+function toggleTemplate() {
+  console.log('toggleTemplate');
+  console.log(document.getElementById('breakfast-radio').checked);
+  if (document.getElementById('breakfast-radio').checked) {
+    document.getElementById('parent-template-input').value = breakfastTemplate.header + '\n' + breakfastTemplate.footer;
+  } else {
+    document.getElementById('parent-template-input').value = lunchTemplate.header + '\n' + lunchTemplate.footer;
+  }
+}
+
+function saveEmojiType() {
+  let emojiType = document.getElementsByName('emoji-type');
+  emojiType.forEach(radio => {
+    if (radio.checked) {
+      switch (radio.value) {
+        case 'zhChar':
+          numberIcons = zhCharIcons;
+          break;
+        case 'alphabetWhite':
+          numberIcons = alphabetWhiteIcons;
+          break;
+        case 'alphabetYellow':
+          numberIcons = alphabetYellowIcons;
+          break;
+      }
+    }
+  });
+}
+
+function saveDateType() {
+  let dateType = document.getElementsByName('date-type');
+  dateType.forEach(radio => {
+    if (radio.checked) {
+      switch (radio.value) {
+        case 'today':
+          requestDate = 'today';
+          break;
+        case 'tomorrow':
+          requestDate = 'tomorrow';
+          break;
+      }
+    }
+  });
+}
+
+
 // 創建模板編輯器
+
 function createTemplateEditor() {
   const editor = document.createElement('div');
   editor.className = 'template-editor';
   editor.innerHTML = `
-    <h3>編輯輸出模板</h3>
-    <label>父層模板：</label>
-    <textarea id="parent-template-input" rows="3" style="width: 100%">${parentTemplate}</textarea>
-    <label>子層模板：</label>
-    <textarea id="item-template-input" rows="3" style="width: 100%">${itemTemplate}</textarea>
-    <button id="save-template">儲存</button>
-    <button id="cancel-template">取消</button>
+    <h3 style="margin-bottom: 10px;">編輯輸出模板</h3>
+
+    <label>訂餐日期：</label><br>
+    <input type="radio" id="today-radio" name="date-type" value="today">
+    <label for="today-radio">今天</label>
+    <input type="radio" id="tomorrow-radio" name="date-type" value="tomorrow" checked>
+    <label for="tomorrow-radio">明天</label><br>
+    <hr class="hr">
+    <label>選擇餐點類型：</label><br>
+    <input type="radio" id="breakfast-radio" name="template-type" value="breakfast">
+    <label for="breakfast-radio">早餐</label>
+    <input type="radio" id="lunch-radio" name="template-type" value="lunch" checked>
+    <label for="lunch-radio">午餐</label><br>
+    <hr class="hr">
+    <label>選擇餐點圖示：</label><br>
+    <input type="radio" id="zhChar-radio" name="emoji-type" value="zhChar" checked>
+    <label for="zhChar-radio"><span id="zhCharEx" class="emojiEx">1</span></label>
+    <input type="radio" id="alphabetWhiteRadio" name="emoji-type" value="alphabetWhite">
+    <label for="alphabetWhiteRadio"><span id="alphabetWhiteEx" class="emojiEx">A</span></label>
+    <input type="radio" id="alphabetYellowRadio" name="emoji-type" value="alphabetYellow">
+    <label for="alphabetYellowRadio"><span id="alphabetYellowEx" class="emojiEx">A</span></label><br>
+    <hr class="hr">
+    <label>父層模板：</label><br>
+    <textarea id="parent-template-input" rows="10" style="width: 100%; margin-top: 5px">${lunchTemplate.header}\n${lunchTemplate.footer}</textarea>
+    <label>子層模板：</label><br>
+    <textarea id="item-template-input" rows="3" style="width: 100%; margin: 5px 0 10px 0">${itemTemplate}</textarea>
+    <button id="save-template" class="btn bg-yellow">儲存</button>&nbsp;&nbsp;
+    <button id="cancel-template" class="btn bg-blue">取消</button>
   `;
   document.body.appendChild(editor);
-  
+
+  document.getElementsByName('template-type').forEach(radio => {
+    radio.addEventListener('click', function(){ toggleTemplate()});
+  });
+
   document.getElementById('save-template').addEventListener('click', function() {
     parentTemplate = document.getElementById('parent-template-input').value;
     itemTemplate = document.getElementById('item-template-input').value;
+    saveEmojiType();
+    saveDateType();
+    document.getElementById('output-content').value = generateOutput();
     editor.classList.remove('visible');
   });
   
@@ -101,28 +237,6 @@ function createTemplateEditor() {
   });
 }
 
-// 創建輸出預覽
-function createOutputPreview() {
-  const preview = document.createElement('div');
-  preview.className = 'output-preview';
-  preview.innerHTML = `
-    <h3>輸出預覽</h3>
-    <pre><div id="output-content"></div></pre>
-    <button id="copy-output-preview">複製</button>
-    <button id="close-preview">關閉</button>
-  `;
-  document.body.appendChild(preview);
-  
-  document.getElementById('copy-output-preview').addEventListener('click', function() {
-    const content = document.getElementById('output-content').textContent;
-    navigator.clipboard.writeText(content);
-    alert('已複製到剪貼簿！');
-  });
-  
-  document.getElementById('close-preview').addEventListener('click', function() {
-    preview.classList.remove('visible');
-  });
-}
 
 // 添加加號按鈕到菜單項目
 function addPlusButtons() {
@@ -137,7 +251,7 @@ function addPlusButtons() {
         selectedItems.add(itemName);
         updatePanel();
         saveToStorage();
-        document.getElementById('output-content').textContent = generateOutput();
+        document.getElementById('output-content').value = generateOutput();
       });
       item.appendChild(button);
     }
@@ -167,7 +281,7 @@ function updatePanel() {
       selectedItems.delete(item);
       updatePanel();
       saveToStorage();
-      document.getElementById('output-content').textContent = generateOutput();
+      document.getElementById('output-content').value = generateOutput();
     });
   });
 }
@@ -184,11 +298,11 @@ function saveToStorage() {
 
 // 生成輸出內容
 function generateOutput() {
+  const outputContent = document.getElementById('output-content');
+  outputContent.classList.remove('hidden');
   const pathSegments = window.location.pathname.split('/').filter(Boolean);
   const storeId = pathSegments[pathSegments.length - 2];
-  const { date, weekday } = getTomorrowDate();
-  
-  const numberIcons = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十'];
+  const { date, weekday } = requestDate === 'today' ? getCurrentDate() : getTomorrowDate();
   
   const formattedItems = Array.from(selectedItems).map((item, index) => {
     const icon = index < numberIcons.length ? `:${numberIcons[index]}:` : `:${index + 1}:`;
@@ -197,8 +311,8 @@ function generateOutput() {
   
   return parentTemplate
     .replace('{store}', decodeURIComponent(storeId))
-    .replace('{date}', date)
-    .replace('{weekday}', weekday)
+    .replace(/{date}/g, date)
+    .replace(/{weekday}/g, weekday)
     .replace('{items}', formattedItems)
     .replace('{count}', selectedItems.size);
 }
@@ -207,17 +321,9 @@ function generateOutput() {
 // 監聽來自 popup 的消息
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   switch (request.action) {
-    case 'editTemplate':
-      document.querySelector('.template-editor').classList.add('visible');
-      break;
     case 'togglePanel':
       const panel = document.querySelector('.selected-items-panel');
       panel.classList.toggle('visible');
-      break;
-    case 'showOutput':
-      const preview = document.querySelector('.output-preview');
-      document.getElementById('output-content').textContent = generateOutput();
-      preview.classList.add('visible');
       break;
   }
 });
