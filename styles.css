@@ -2,12 +2,14 @@
   box-sizing: border-box;
 }
 
-[data-testid="store-desktop-loaded-coi"] ul:nth-of-type(2) > li {
+[data-testid="store-desktop-loaded-coi"] ul:nth-of-type(2) > li,
+#menu>.menu ul>li {
   position: relative;
   transition: box-shadow 0.3s ease;
 }
 
-[data-testid="store-desktop-loaded-coi"] ul:nth-of-type(2) > li:hover {
+[data-testid="store-desktop-loaded-coi"] ul:nth-of-type(2) > li:hover,
+#menu>.menu ul>li:hover {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -64,7 +66,7 @@ textarea {
 
 .add-button {
   position: absolute;
-
+  z-index: 10000;
   top: 10px;
   left: 10px;
   width: 24px;
@@ -80,7 +82,8 @@ textarea {
   transition: opacity 0.3s ease;
 }
 
-[data-testid="store-desktop-loaded-coi"] ul ul > li:hover .add-button {
+[data-testid="store-desktop-loaded-coi"] ul ul > li:hover .add-button,
+#menu>.menu ul>li:hover .add-button {
   opacity: 1;
 }
 
