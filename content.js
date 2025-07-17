@@ -70,11 +70,49 @@ function getCurrentDate() {
   return { date, weekday };
 }
 
+// 檢測當前平台
+function detectPlatform() {
+  const hostname = window.location.hostname;
+  if (hostname.includes('ubereats.com')) {
+    return 'ubereats';
+  } else if (hostname.includes('foodpanda.com')) {
+    return 'foodpanda';
+  }
+  return 'unknown';
+}
+
+// 根據平台獲取店家ID
+function getStoreId() {
+  const platform = detectPlatform();
+  const pathSegments = window.location.pathname.split('/').filter(Boolean);
+  
+  if (platform === 'ubereats') {
+    // UberEats: 倒數第二個元素
+    return pathSegments[pathSegments.length - 2];
+  } else if (platform === 'foodpanda') {
+    // FoodPanda: 使用頁面上的店家名稱
+    const titleElement = document.querySelector('h1.main-info__title');
+    if (titleElement) {
+      return titleElement.innerText.trim();
+    }
+    // 如果找不到標題元素，回退到原本的URL方式
+    const restaurantIndex = pathSegments.findIndex(segment => segment === 'restaurant');
+    if (restaurantIndex !== -1 && restaurantIndex + 1 < pathSegments.length) {
+      return pathSegments.slice(restaurantIndex + 1).join('/');
+    }
+  }
+  return null;
+}
+
 // 初始化功能
 function initialize() {
   // 從 URL 中獲取店家 ID
-  const pathSegments = window.location.pathname.split('/').filter(Boolean);
-  const storeId = pathSegments[pathSegments.length - 2]; // 倒數第二個元素
+  const storeId = getStoreId();
+  
+  if (!storeId) {
+    console.error('無法獲取店家ID');
+    return;
+  }
   
   // 從存儲中讀取數據
   chrome.storage.local.get([storeId], function(result) {
@@ -240,18 +278,35 @@ function createTemplateEditor() {
 
 // 添加加號按鈕到菜單項目
 function addPlusButtons() {
-  const menuItems = document.querySelectorAll('[data-testid="store-desktop-loaded-coi"] ul ul > li');
+  const platform = detectPlatform();
+  let menuItems = [];
+  
+  if (platform === 'ubereats') {
+    menuItems = document.querySelectorAll('[data-testid="store-desktop-loaded-coi"] ul ul > li');
+  } else if (platform === 'foodpanda') {
+    menuItems = document.querySelectorAll('#menu>.menu ul>li');
+  }
+  
   menuItems.forEach(item => {
     if (!item.querySelector('.add-button')) {
       const button = document.createElement('div');
       button.className = 'add-button';
       button.addEventListener('click', function(e) {
         e.stopPropagation();
-        const itemName = item.querySelector('a span').textContent.trim();
-        selectedItems.add(itemName);
-        updatePanel();
-        saveToStorage();
-        document.getElementById('output-content').value = generateOutput();
+        let itemName = '';
+        
+        if (platform === 'ubereats') {
+          itemName = item.querySelector('a span').textContent.trim();
+        } else if (platform === 'foodpanda') {
+          itemName = item.querySelector('h3').textContent.trim();
+        }
+        
+        if (itemName) {
+          selectedItems.add(itemName);
+          updatePanel();
+          saveToStorage();
+          document.getElementById('output-content').value = generateOutput();
+        }
       });
       item.appendChild(button);
     }
@@ -289,19 +344,19 @@ function updatePanel() {
 // 保存到存儲
 function saveToStorage() {
   // 從 URL 中獲取店家 ID
-  const pathSegments = window.location.pathname.split('/').filter(Boolean);
-  const storeId = pathSegments[pathSegments.length - 2]; // 倒數第二個元素
-  chrome.storage.local.set({
-    [storeId]: Array.from(selectedItems)
-  });
+  const storeId = getStoreId();
+  if (storeId) {
+    chrome.storage.local.set({
+      [storeId]: Array.from(selectedItems)
+    });
+  }
 }
 
 // 生成輸出內容
 function generateOutput() {
   const outputContent = document.getElementById('output-content');
   outputContent.classList.remove('hidden');
-  const pathSegments = window.location.pathname.split('/').filter(Boolean);
-  const storeId = pathSegments[pathSegments.length - 2];
+  const storeId = getStoreId();
   const { date, weekday } = requestDate === 'today' ? getCurrentDate() : getTomorrowDate();
   
   const formattedItems = Array.from(selectedItems).map((item, index) => {
@@ -310,7 +365,7 @@ function generateOutput() {
   }).join('\n');
   
   return parentTemplate
-    .replace('{store}', decodeURIComponent(storeId))
+    .replace('{store}', decodeURIComponent(storeId || ''))
     .replace(/{date}/g, date)
     .replace(/{weekday}/g, weekday)
     .replace('{items}', formattedItems)
