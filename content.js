@@ -26,9 +26,9 @@ let requestDate = "tomorrow";
 
 // 取得明天的日期和星期
 function getTomorrowDate() {
-  const tomorrow = new Date();
+  let tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const dayOfWeek = tomorrow.getDay();
+  let dayOfWeek = tomorrow.getDay();
   switch(dayOfWeek) {
     case 0:
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -49,9 +49,9 @@ function getTomorrowDate() {
 
 // 取得明天的日期和星期
 function getCurrentDate() {
-  const current = new Date();
+  let current = new Date();
   current.setDate(current.getDate());
-  const dayOfWeek = current.getDay();
+  let dayOfWeek = current.getDay();
   switch(dayOfWeek) {
     case 0:
       current.setDate(current.getDate() + 1);
